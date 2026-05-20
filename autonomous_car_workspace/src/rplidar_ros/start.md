@@ -1,0 +1,1 @@
+ros2 launch rplidar_ros rplidar_a2m12_launch.py serial_port:=/dev/ttyUSB0 serial_baudrate:=256000
