@@ -13,11 +13,13 @@ class LidarMonitorNode(Node):
         self.declare_parameter('front_danger_zone', 0.6)
         self.declare_parameter('side_safe_zone', 0.8)
         self.declare_parameter('scan_topic', '/scan')
+        self.declare_parameter('lidar_offset_deg', 0.0)
 
         # Get initial parameter values
         self.front_danger_zone = self.get_parameter('front_danger_zone').value
         self.side_safe_zone = self.get_parameter('side_safe_zone').value
         self.scan_topic = self.get_parameter('scan_topic').value
+        self.lidar_offset_deg = self.get_parameter('lidar_offset_deg').value
 
         # Create subscription and publishers
         self.scan_sub = self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, 10)
@@ -35,6 +37,9 @@ class LidarMonitorNode(Node):
             elif param.name == 'side_safe_zone':
                 self.side_safe_zone = param.value
                 self.get_logger().info(f"side_safe_zone updated to: {self.side_safe_zone}")
+            elif param.name == 'lidar_offset_deg':
+                self.lidar_offset_deg = param.value
+                self.get_logger().info(f"lidar_offset_deg updated to: {self.lidar_offset_deg}")
             elif param.name == 'scan_topic':
                 self.scan_topic = param.value
                 self.get_logger().info(f"scan_topic updated to: {self.scan_topic}. Re-subscribing...")
@@ -44,26 +49,31 @@ class LidarMonitorNode(Node):
 
     def scan_callback(self, msg):
         ranges = msg.ranges
-        num_readings = len(ranges)
         
-        # Assume 0 degrees is straight ahead. 
-        # Check a 30-degree cone in front (-15 to +15 degrees)
-        front_indices = list(range(0, 15)) + list(range(num_readings - 15, num_readings))
         obstacle_ahead = False
-        for i in front_indices:
-            if 0.1 < ranges[i] < self.front_danger_zone: # Ignore 0.0 (error readings)
-                obstacle_ahead = True
-                break
-                
-        # Check the right side (approx 260 to 280 degrees assuming 0 is front, counter-clockwise)
-        # 270 degrees is exactly to the right.
-        side_index_center = int(270 * (num_readings / 360.0))
-        side_indices = range(side_index_center - 10, side_index_center + 10)
         side_clear = True
-        for i in side_indices:
-            if 0.1 < ranges[i] < self.side_safe_zone:
-                side_clear = False
-                break
+        
+        offset_rad = math.radians(self.lidar_offset_deg)
+        
+        for i, r in enumerate(ranges):
+            # Ignore range values outside spec or empty readings
+            if r <= 0.1 or r > msg.range_max or not math.isfinite(r):
+                continue
+            
+            # Calculate actual angle of reading
+            angle = msg.angle_min + i * msg.angle_increment + offset_rad
+            # Wrap to [-pi, pi]
+            angle = (angle + math.pi) % (2 * math.pi) - math.pi
+            
+            # Check front cone: -15 to +15 degrees
+            if -math.radians(15) <= angle <= math.radians(15):
+                if r < self.front_danger_zone:
+                    obstacle_ahead = True
+            
+            # Check right side: -105 to -75 degrees (-pi/2 +/- 15 deg)
+            if -math.radians(105) <= angle <= -math.radians(75):
+                if r < self.side_safe_zone:
+                    side_clear = False
 
         # Publish states
         obs_msg = Bool()
