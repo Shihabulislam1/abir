@@ -1,0 +1,25 @@
+serial_bridge_node:
+  ros__parameters:
+    port: "/dev/ttyACM0"
+    baudrate: 115200
+    wheel_separation: 0.2
+    max_pwm: 255
+    speed_to_pwm_factor: 500.0
+
+brain_node:
+  ros__parameters:
+    kp: 0.005
+    kd: 0.001
+    base_speed: 0.3
+    nudge_duration: 1.2
+
+lidar_monitor_node:
+  ros__parameters:
+    front_danger_zone: 0.6
+    side_safe_zone: 0.8
+    scan_topic: "/scan"
+
+vision_node:
+  ros__parameters:
+    video_device: 0
+    target_lane: 1
