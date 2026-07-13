@@ -23,7 +23,7 @@ graph TD
 ```
 
 ### Node Descriptions
-1. **`vision_node`**: Captures frames from a camera, performs image processing (Gaussian Blur, Canny edge detection, Region of Interest masking, Hough Line Transform), computes the deviation from the lane center, and publishes the lane error.
+1. **`vision_node`**: Captures frames from a camera (supports `webcam` and `picamera2`), performs image processing (Perspective Warp, adaptive thresholding, component clustering, and polyfit), computes the deviation from the lane center, and publishes the lane error. It also hosts an embedded HTTP MJPEG Streamer and Web Tuner (default port 8080) for live parameter tuning.
 2. **`lidar_monitor_node`**: Monitors laser scan readings to check for obstacles directly in front of the vehicle and clear paths on the right side.
 3. **`brain_node`**: A state machine that executes PID-based lane following and obstacles nudges (moving between Lane 1 and Lane 2).
 4. **`serial_bridge_node`**: Receives target velocities (`cmd_vel`), performs differential drive kinematics, converts speeds to PWM values, and transmits them to the Arduino.
@@ -83,6 +83,14 @@ vision_node:
   ros__parameters:
     video_device: 0                 # OpenCV camera device index
     target_lane: 1                  # Default tracking lane (1: Right, 2: Left)
+    camera_source: "webcam"         # Source type: 'webcam' or 'picamera'
+    camera_rotate_180: false        # Rotate camera feed 180 degrees
+    stream_enabled: true            # Enable HTTP MJPEG streamer / Web Tuner
+    stream_port: 8080               # Port for the Web Tuner UI
+    jpeg_quality: 80                # JPEG encoding quality for the stream
+    lidar_overlay_enabled: true     # Enable 2D radar inset in HUD
+    lidar_max_range_mm: 6000.0      # Max range for LiDAR inset visualization
+    lidar_inset_size_px: 220        # Size of the LiDAR inset widget
 ```
 
 ---
@@ -128,7 +136,10 @@ ros2 launch robot_navigation nav_launch.py params_file:=/path/to/your/custom_par
 ```
 
 ### 3. Dynamic Reconfiguration (Runtime Tuning)
-You can tune the parameters dynamically while the system is running using `ros2 param`. 
+You can tune the parameters dynamically while the system is running using `ros2 param` or the **Web Tuner UI**.
+
+* **Access Web Tuner UI**:
+  Open your browser and navigate to `http://<robot-ip>:8080/`. From there you can view the live annotated camera feed and adjust thresholding/lane detection parameters in real time.
 
 * **Modify PID Gains (Brain Node)**:
   ```bash
@@ -141,5 +152,6 @@ You can tune the parameters dynamically while the system is running using `ros2 
   ```
 * **Switch Camera Input Device**:
   ```bash
+  ros2 param set /vision_node camera_source "picamera"
   ros2 param set /vision_node video_device 1
   ```

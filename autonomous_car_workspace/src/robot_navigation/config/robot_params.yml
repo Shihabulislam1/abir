@@ -23,3 +23,11 @@ vision_node:
   ros__parameters:
     video_device: 3
     target_lane: 1
+    camera_source: "webcam"
+    camera_rotate_180: false
+    stream_enabled: true
+    stream_port: 8080
+    jpeg_quality: 80
+    lidar_overlay_enabled: true
+    lidar_max_range_mm: 6000.0
+    lidar_inset_size_px: 220

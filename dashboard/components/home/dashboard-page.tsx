@@ -56,6 +56,7 @@ export function DashboardPage() {
   const [frontDangerZone, setFrontDangerZone] = React.useState<number>(0.6);
   const [sideSafeZone, setSideSafeZone] = React.useState<number>(0.8);
   const [lidarOffsetDeg, setLidarOffsetDeg] = React.useState<number>(0.0);
+  const [cameraSource, setCameraSource] = React.useState<string>("webcam");
 
   // Live telemetry received from /robot_status
   const [telemetry, setTelemetry] = React.useState<RobotStatus>({
@@ -595,6 +596,43 @@ export function DashboardPage() {
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 px-4 pb-4">
                   
+                  {/* Vision Tuner & Camera Source */}
+                  <div className="flex flex-col gap-2 bg-zinc-900/40 p-2.5 rounded-lg border border-zinc-900/80 mb-2">
+                    <div className="flex justify-between items-center text-[11px] font-mono">
+                      <span className="text-zinc-400">Camera Source</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setCameraSource("webcam");
+                            setRosParameter("vision_node", "camera_source", 4, "webcam");
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${cameraSource === "webcam" ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700"}`}
+                        >
+                          WEBCAM
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCameraSource("picamera");
+                            setRosParameter("vision_node", "camera_source", 4, "picamera");
+                          }}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${cameraSource === "picamera" ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700"}`}
+                        >
+                          PICAMERA
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={() => {
+                        const tunerHost = wsUri.replace("ws://", "").replace("wss://", "").split(":")[0];
+                        window.open(`http://${tunerHost}:8080`, '_blank');
+                      }}
+                      className="w-full bg-indigo-600/80 hover:bg-indigo-500 text-white h-7 text-[11px] flex items-center justify-center gap-1.5 mt-1 border border-indigo-500/50 shadow-lg shadow-indigo-900/20"
+                    >
+                      <Sliders className="h-3 w-3" /> Launch Live Vision Tuner
+                    </Button>
+                  </div>
+
                   {/* Speed Config */}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-[11px] font-mono">
