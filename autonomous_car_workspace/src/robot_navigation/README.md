@@ -155,3 +155,21 @@ You can tune the parameters dynamically while the system is running using `ros2 
   ros2 param set /vision_node camera_source "picamera"
   ros2 param set /vision_node video_device 1
   ```
+
+### 4. Web Dashboard & Remote Monitoring
+The external Next.js dashboard requires `rosbridge_server` to communicate with the ROS 2 workspace via WebSockets.
+
+1. **Install `rosbridge-suite`** (if not installed):
+   ```bash
+   sudo apt install ros-jazzy-rosbridge-suite
+   ```
+2. **Launch the WebSocket server** alongside your navigation stack:
+   ```bash
+   ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+   ```
+3. **Run the Dashboard** (can be done on any computer on the same network):
+   ```bash
+   cd ~/dashboard
+   npm run dev
+   ```
+4. **Connect**: Open `http://localhost:3000` in your browser. In the top connection bar, change `localhost` to your robot's IP address (e.g., `ws://192.168.1.50:9090`) and click Connect.
