@@ -617,7 +617,9 @@ export function DashboardPage() {
                         telemetry.current_sign === 'green' ? 'text-emerald-400' :
                         'text-zinc-500'
                       }`}>
-                        {telemetry.current_sign === 'none' ? 'NO SIGN DETECTED' : `${telemetry.current_sign} SIGN`}
+                        {telemetry.current_sign === 'none' ? 'NO SIGN DETECTED' : 
+                         telemetry.current_sign === 'pink' ? 'RED SIGN' : 
+                         `${telemetry.current_sign} SIGN`}
                       </div>
                     </div>
                   </div>
