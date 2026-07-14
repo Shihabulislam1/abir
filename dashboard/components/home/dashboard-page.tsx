@@ -18,7 +18,8 @@ import {
   ArrowUp,
   ArrowLeft,
   ArrowDown,
-  ArrowRight
+  ArrowRight,
+  Signpost
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -34,6 +35,8 @@ interface RobotStatus {
   enabled: boolean;
   mode: "auto" | "manual";
   state: number;
+  sign_state: "none" | "stopped" | "slow";
+  current_sign: "none" | "red" | "pink" | "yellow" | "green";
   lane_error: number;
   obstacle_ahead: boolean;
   side_clear: boolean;
@@ -63,6 +66,8 @@ export function DashboardPage() {
     enabled: true,
     mode: "auto",
     state: 1,
+    sign_state: "none",
+    current_sign: "none",
     lane_error: 0.0,
     obstacle_ahead: false,
     side_clear: true,
@@ -580,6 +585,39 @@ export function DashboardPage() {
                             right: telemetry.lane_error < 0 ? "50%" : "auto"
                           }}
                         />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Traffic Sign Status */}
+                  <div className={`col-span-2 p-2.5 rounded-lg border transition-all duration-300 ${
+                    telemetry.current_sign === 'red' || telemetry.current_sign === 'pink' ? 'bg-red-500/10 border-red-500/30' :
+                    telemetry.current_sign === 'yellow' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                    telemetry.current_sign === 'green' ? 'bg-emerald-500/10 border-emerald-500/30' :
+                    'bg-zinc-900/40 border-zinc-900/80'
+                  }`}>
+                    <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider font-mono flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Signpost className="h-3 w-3" /> Traffic Sign
+                      </div>
+                      <span className="text-[9px] font-mono text-zinc-500">
+                        {telemetry.sign_state === 'stopped' ? 'WAITING' : telemetry.sign_state === 'slow' ? 'REDUCED SPEED' : 'NORMAL'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className={`w-6 h-6 rounded-full border shadow-sm ${
+                        telemetry.current_sign === 'red' || telemetry.current_sign === 'pink' ? 'bg-red-500 border-red-400 shadow-red-500/50' :
+                        telemetry.current_sign === 'yellow' ? 'bg-yellow-400 border-yellow-300 shadow-yellow-500/50' :
+                        telemetry.current_sign === 'green' ? 'bg-emerald-500 border-emerald-400 shadow-emerald-500/50' :
+                        'bg-zinc-800 border-zinc-700'
+                      }`} />
+                      <div className={`text-[12px] font-bold uppercase ${
+                        telemetry.current_sign === 'red' || telemetry.current_sign === 'pink' ? 'text-red-400' :
+                        telemetry.current_sign === 'yellow' ? 'text-yellow-400' :
+                        telemetry.current_sign === 'green' ? 'text-emerald-400' :
+                        'text-zinc-500'
+                      }`}>
+                        {telemetry.current_sign === 'none' ? 'NO SIGN DETECTED' : `${telemetry.current_sign} SIGN`}
                       </div>
                     </div>
                   </div>
