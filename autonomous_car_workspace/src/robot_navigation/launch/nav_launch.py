@@ -1,9 +1,10 @@
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch.launch_description_sources import AnyLaunchDescriptionSource, PythonLaunchDescriptionSource
 
 def generate_launch_description():
     # Find package share directory
@@ -14,6 +15,32 @@ def generate_launch_description():
         'params_file',
         default_value=PathJoinSubstitution([pkg_share, 'config', 'robot_params.yml']),
         description='Path to the ROS2 parameters file'
+    )
+
+    # Rosbridge WebSocket Server
+    rosbridge_launch = IncludeLaunchDescription(
+        AnyLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('rosbridge_server'),
+                'launch',
+                'rosbridge_websocket_launch.xml'
+            ])
+        )
+    )
+
+    # RPLidar
+    rplidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('rplidar_ros'),
+                'launch',
+                'rplidar_a2m12_launch.py'
+            ])
+        ),
+        launch_arguments={
+            'serial_port': '/dev/ttyUSB0',
+            'serial_baudrate': '256000'
+        }.items()
     )
 
     # Serial Bridge Node
@@ -63,6 +90,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         params_file_arg,
+        rosbridge_launch,
+        rplidar_launch,
         serial_bridge_node,
         brain_node,
         lidar_monitor_node,
