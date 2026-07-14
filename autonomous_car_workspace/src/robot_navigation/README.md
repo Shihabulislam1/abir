@@ -14,6 +14,7 @@ graph TD
     Vision -->|/lane_error| Brain[brain_node]
     LidarMon -->|/obstacle_ahead| Brain
     LidarMon -->|/side_clear| Brain
+    SignDet[sign_detector_node] -->|/traffic_sign| Brain
 
     Brain -->|/cmd_vel| SerialBridge[serial_bridge_node]
     Brain -->|/target_lane| Vision
@@ -25,8 +26,9 @@ graph TD
 ### Node Descriptions
 1. **`vision_node`**: Captures frames from a camera (supports `webcam` and `picamera2`), performs image processing (Perspective Warp, adaptive thresholding, component clustering, and polyfit), computes the deviation from the lane center, and publishes the lane error. It also hosts an embedded HTTP MJPEG Streamer and Web Tuner (default port 8080) for live parameter tuning.
 2. **`lidar_monitor_node`**: Monitors laser scan readings to check for obstacles directly in front of the vehicle and clear paths on the right side.
-3. **`brain_node`**: A state machine that executes PID-based lane following and obstacles nudges (moving between Lane 1 and Lane 2).
-4. **`serial_bridge_node`**: Receives target velocities (`cmd_vel`), performs differential drive kinematics, converts speeds to PWM values, and transmits them to the Arduino.
+3. **`sign_detector_node`**: Subscribes to the camera frames and detects colored circular signs (Red/Pink, Yellow, Green) using HSV filtering and shape analysis, publishing them to the brain.
+4. **`brain_node`**: A state machine that executes PID-based lane following, stops when an obstacle is detected, performs obstacles nudges (moving between Lane 1 and Lane 2), and reacts to traffic signs (Red=Stop 10s, Yellow=Slow, Green=Continue).
+5. **`serial_bridge_node`**: Receives target velocities (`cmd_vel`), performs differential drive kinematics, converts speeds to PWM values, and transmits them to the Arduino.
 
 ---
 
@@ -72,6 +74,10 @@ brain_node:
     kd: 0.001                       # Derivative gain for steering control
     base_speed: 0.3                 # Linear forward velocity (m/s)
     nudge_duration: 1.2             # Lane nudge duration in seconds
+    obstacle_stop_duration: 1.0     # Time to stop before nudging (s)
+    pass_clearance_duration: 0.5    # Time to wait after passing obstacle before returning (s)
+    slow_speed: 0.15                # Speed when yellow sign detected
+    sign_stop_duration: 10.0        # Time to stop for red signs (s)
 
 lidar_monitor_node:
   ros__parameters:
@@ -88,9 +94,13 @@ vision_node:
     stream_enabled: true            # Enable HTTP MJPEG streamer / Web Tuner
     stream_port: 8080               # Port for the Web Tuner UI
     jpeg_quality: 80                # JPEG encoding quality for the stream
-    lidar_overlay_enabled: true     # Enable 2D radar inset in HUD
-    lidar_max_range_mm: 6000.0      # Max range for LiDAR inset visualization
-    lidar_inset_size_px: 220        # Size of the LiDAR inset widget
+
+sign_detector_node:
+  ros__parameters:
+    min_sign_area: 500              # Minimum contour area to be a sign
+    circularity_threshold: 0.7      # Min ratio of contour area to enclosing circle
+    detection_confidence_frames: 3  # Debounce frames
+    sign_cooldown: 12.0             # Cooldown after acting on a sign
 ```
 
 ---

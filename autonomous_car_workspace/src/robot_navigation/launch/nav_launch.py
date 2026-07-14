@@ -52,10 +52,20 @@ def generate_launch_description():
         parameters=[LaunchConfiguration('params_file')]
     )
 
+    # Sign Detector Node
+    sign_detector_node = Node(
+        package='robot_navigation',
+        executable='sign_detector',
+        name='sign_detector_node',
+        output='screen',
+        parameters=[LaunchConfiguration('params_file')]
+    )
+
     return LaunchDescription([
         params_file_arg,
         serial_bridge_node,
         brain_node,
         lidar_monitor_node,
-        vision_node
+        vision_node,
+        sign_detector_node
     ])

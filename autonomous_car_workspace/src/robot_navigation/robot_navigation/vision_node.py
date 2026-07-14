@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32, Int32
-from sensor_msgs.msg import Image, CompressedImage, LaserScan
+from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge
 from rcl_interfaces.msg import SetParametersResult
 import cv2
@@ -77,9 +77,6 @@ class VisionNode(Node):
         self.declare_parameter('stream_enabled', True)      # NEW
         self.declare_parameter('stream_port', 8080)         # NEW
         self.declare_parameter('jpeg_quality', 80)          # NEW
-        self.declare_parameter('lidar_overlay_enabled', True)  # NEW
-        self.declare_parameter('lidar_max_range_mm', 6000.0)   # NEW
-        self.declare_parameter('lidar_inset_size_px', 220)     # NEW
         
         self.target_lane = self.get_parameter('target_lane').value
 
@@ -95,12 +92,6 @@ class VisionNode(Node):
 
         # MJPEG streamer
         self._setup_streamer()
-
-        # LiDAR subscription for overlay
-        self._lidar_scan = None
-        if self.get_parameter('lidar_overlay_enabled').value:
-            self.lidar_sub = self.create_subscription(
-                LaserScan, '/scan', self._lidar_callback, 10)
 
         # Publishers (same as before)
         self.error_pub = self.create_publisher(Float32, 'lane_error', 10)
@@ -145,17 +136,6 @@ class VisionNode(Node):
         else:
             self.streamer = None
 
-    def _lidar_callback(self, msg):
-        """Convert LaserScan → Nx2 (angle_deg, distance_mm) for overlay."""
-        n = len(msg.ranges)
-        angles = np.array([
-            math.degrees(msg.angle_min + i * msg.angle_increment)
-            for i in range(n)
-        ], dtype=np.float32)
-        dists = np.array(msg.ranges, dtype=np.float32) * 1000.0  # m → mm
-        valid = np.isfinite(dists) & (dists > 0)
-        self._lidar_scan = np.column_stack([angles[valid], dists[valid]])
-
     def param_callback(self, params):
         for param in params:
             if param.name == 'target_lane':
@@ -197,9 +177,6 @@ class VisionNode(Node):
             steering=steering, fps=fps,
             target_lane=target_lane_str,
             perspective=self.detector._persp,
-            lidar_scan=self._lidar_scan,
-            lidar_max_range_mm=self.get_parameter('lidar_max_range_mm').value,
-            lidar_inset_size_px=self.get_parameter('lidar_inset_size_px').value,
         )
 
         # Push to annotated frame provider (for streamer)

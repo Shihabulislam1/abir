@@ -12,6 +12,10 @@ brain_node:
     kd: 0.001
     base_speed: 0.3
     nudge_duration: 1.2
+    obstacle_stop_duration: 1.0
+    pass_clearance_duration: 0.5
+    slow_speed: 0.15
+    sign_stop_duration: 10.0
 
 lidar_monitor_node:
   ros__parameters:
@@ -21,13 +25,29 @@ lidar_monitor_node:
 
 vision_node:
   ros__parameters:
-    video_device: 3
+    video_device: 0
     target_lane: 1
     camera_source: "webcam"
     camera_rotate_180: false
     stream_enabled: true
     stream_port: 8080
     jpeg_quality: 80
-    lidar_overlay_enabled: true
-    lidar_max_range_mm: 6000.0
-    lidar_inset_size_px: 220
+
+sign_detector_node:
+  ros__parameters:
+    min_sign_area: 500
+    circularity_threshold: 0.7
+    detection_confidence_frames: 3
+    sign_cooldown: 12.0
+    red_h_low: 0
+    red_h_high: 10
+    red2_h_low: 160
+    red2_h_high: 180
+    pink_h_low: 140
+    pink_h_high: 170
+    yellow_h_low: 20
+    yellow_h_high: 35
+    green_h_low: 40
+    green_h_high: 85
+    s_low: 100
+    v_low: 80

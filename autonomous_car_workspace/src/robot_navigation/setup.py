@@ -32,6 +32,7 @@ setup(
             'brain = robot_navigation.brain_node:main',
             'lidar_monitor = robot_navigation.lidar_monitor:main',
             'vision = robot_navigation.vision_node:main',
+            'sign_detector = robot_navigation.sign_detector_node:main',
         ],
     },
 )
