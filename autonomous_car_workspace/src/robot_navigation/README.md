@@ -24,6 +24,7 @@ graph TD
 ```
 
 ### Node Descriptions
+
 1. **`vision_node`**: Captures frames from a camera (supports `webcam` and `picamera2`), performs image processing (Perspective Warp, adaptive thresholding, component clustering, and polyfit), computes the deviation from the lane center, and publishes the lane error. It also hosts an embedded HTTP MJPEG Streamer and Web Tuner (default port 8080) for live parameter tuning.
 2. **`lidar_monitor_node`**: Monitors laser scan readings to check for obstacles directly in front of the vehicle and clear paths on the right side.
 3. **`sign_detector_node`**: Subscribes to the camera frames and detects colored circular signs (Red/Pink, Yellow, Green) using HSV filtering and shape analysis, publishing them to the brain.
@@ -35,20 +36,23 @@ graph TD
 ## Hardware Configuration
 
 ### Arduino Motor Controller (BTS7960)
+
 The vehicle's DC motors are driven using two **BTS7960 H-Bridge** drivers connected to the Arduino.
 
 #### Wiring Diagram
-| BTS7960 Driver Pin | Arduino Pin | Description |
-|---|---|---|
-| **RPWM_L** (Left Forward PWM) | `D5` | Left motor forward speed controller (PWM) |
-| **LPWM_L** (Left Reverse PWM) | `D6` | Left motor reverse speed controller (PWM) |
-| **R_EN_L** / **L_EN_L** | `D2` / `D3` | Enable left driver (Active HIGH) |
-| **RPWM_R** (Right Forward PWM) | `D10` | Right motor forward speed controller (PWM) |
-| **LPWM_R** (Right Reverse PWM) | `D11` | Right motor reverse speed controller (PWM) |
-| **R_EN_R** / **L_EN_R** | `D12` / `D13` | Enable right driver (Active HIGH) |
-| **GND** | `GND` | Ground connection |
+
+| BTS7960 Driver Pin                   | Arduino Pin       | Description                                |
+| ------------------------------------ | ----------------- | ------------------------------------------ |
+| **RPWM_L** (Left Forward PWM)  | `D5`            | Left motor forward speed controller (PWM)  |
+| **LPWM_L** (Left Reverse PWM)  | `D6`            | Left motor reverse speed controller (PWM)  |
+| **R_EN_L** / **L_EN_L**  | `D2` / `D3`   | Enable left driver (Active HIGH)           |
+| **RPWM_R** (Right Forward PWM) | `D10`           | Right motor forward speed controller (PWM) |
+| **LPWM_R** (Right Reverse PWM) | `D11`           | Right motor reverse speed controller (PWM) |
+| **R_EN_R** / **L_EN_R**  | `D12` / `D13` | Enable right driver (Active HIGH)          |
+| **GND**                        | `GND`           | Ground connection                          |
 
 #### Arduino Serial Protocol
+
 * **Baudrate**: `115200`
 * **Format**: `<L:left_pwm,R:right_pwm>\n`
 * **Range**: `-255` to `255` (Negative: Reverse, Positive: Forward)
@@ -108,19 +112,19 @@ sign_detector_node:
 ## Build Instructions
 
 1. Source your ROS 2 underlay:
+
    ```bash
    source /opt/ros/jazzy/setup.bash
    ```
-
 2. Clone/move the package into your ROS 2 workspace (e.g., `~/autonomous_car_workspace/src/`).
-
 3. Resolve dependencies using `rosdep`:
+
    ```bash
    cd ~/autonomous_car_workspace
    rosdep install --from-paths src --ignore-src -y
    ```
-
 4. Build the package:
+
    ```bash
    colcon build --packages-select robot_navigation
    ```
@@ -130,7 +134,9 @@ sign_detector_node:
 ## Running the System
 
 ### 1. Launch All Nodes
+
 To run the full navigation stack using the default parameter configurations:
+
 ```bash
 # Source workspace overlay
 source ~/autonomous_car_workspace/install/setup.bash
@@ -140,33 +146,39 @@ ros2 launch robot_navigation nav_launch.py
 ```
 
 ### 2. Override Configurations
+
 You can specify a custom parameter file when launching:
+
 ```bash
 ros2 launch robot_navigation nav_launch.py params_file:=/path/to/your/custom_params.yml
 ```
 
 ### 3. Dynamic Reconfiguration (Runtime Tuning)
+
 You can tune the parameters dynamically while the system is running using `ros2 param` or the **Web Tuner UI**.
 
 * **Access Web Tuner UI**:
   Open your browser and navigate to `http://<robot-ip>:8080/`. From there you can view the live annotated camera feed and adjust thresholding/lane detection parameters in real time.
-
 * **Modify PID Gains (Brain Node)**:
+
   ```bash
   ros2 param set /brain_node kp 0.007
   ros2 param set /brain_node kd 0.002
   ```
 * **Alter Base Speed**:
+
   ```bash
   ros2 param set /brain_node base_speed 0.4
   ```
 * **Switch Camera Input Device**:
+
   ```bash
   ros2 param set /vision_node camera_source "picamera"
   ros2 param set /vision_node video_device 1
   ```
 
 ### 4. Web Dashboard & Remote Monitoring
+
 The external Next.js dashboard requires `rosbridge_server` to communicate with the ROS 2 workspace via WebSockets.
 
 1. **Install `rosbridge-suite`** (if not installed):
